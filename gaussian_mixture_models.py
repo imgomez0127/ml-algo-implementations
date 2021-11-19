@@ -26,7 +26,7 @@ def plot_results(iris_data, my_preds, sklearn_preds):
     TSNE = sklearn.manifold.TSNE(init='pca', learning_rate='auto')
     embedding = TSNE.fit_transform(iris_data)
     colors = ['r', 'b', 'g']
-    fig, axs = plt.subplots(2)
+    fig, axs = plt.subplots(3)
     fig.suptitle('My implementation vs sklearn implementation')
     for i, color in enumerate(colors):
         cluster = my_preds == i
@@ -34,6 +34,8 @@ def plot_results(iris_data, my_preds, sklearn_preds):
     for i, color in enumerate(colors):
         cluster = sklearn_preds == i
         axs[1].scatter(embedding[cluster, 0], embedding[cluster, 1], color=color)
+    for i, color in enumerate(colors):
+        axs[2].scatter(embedding[i*50:i*50+50, 0], embedding[i*50:i*50+50, 1], color=color)
     plt.show()
 
 class GMM:
