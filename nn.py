@@ -6,7 +6,6 @@
    Description : Neural Network implementation using JAX to test out a new framework.
    Github  : imgomez0127@github
 """
-from functools import partial
 import numpy as np
 import jax
 import jax.numpy as jnp
@@ -43,8 +42,7 @@ def plot_results(iris_data, my_preds, true_preds):
             embedding[cluster, 0], embedding[cluster, 1], color=color)
     plt.show()
 
-
-@partial(jax.jit)
+@jax.jit
 def forward(layers, data):
     z = data
     for layer in layers[:-1]:
@@ -95,7 +93,7 @@ def main():
     hidden_layer_width = 10
     hidden_layer_shape = (hidden_layer_width, hidden_layer_width-1)
     output_shape = 3
-    nn = NeuralNetwork(input_shape, hidden_layer_shape, 2, output_shape)
+    nn = NeuralNetwork(input_shape, hidden_layer_shape, 3, output_shape)
     targets = jax.nn.one_hot(dataset[:, -1], 3)
     data = dataset[:, :-1]
     nn.train(1000, data, targets)
