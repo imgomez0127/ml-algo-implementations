@@ -41,7 +41,7 @@ def conditional_entropy(data, feature):
 def get_feature(data, features):
     feature_probs = [(feature, conditional_entropy(data, feature))
                      for feature in features]
-    return min(feature_probs, key=lambda x: x[1])[0]
+    return max(feature_probs, key=lambda x: x[1])[0]
 
 def check_inputs(data):
     data = data.values
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     # and do not want to deal with having to split real valued numbers into classes
     # Essentially it kinda does that by treating all intermediate float values
     # as just the base integer
-    df = pd.read_csv('iris.data')
+    df = pd.read_csv('iris_header.data')
     class_names = ('Iris-setosa', 'Iris-versicolor', 'Iris-virginica')
     classes = df['class'].values
     for i, class_name in enumerate(class_names):

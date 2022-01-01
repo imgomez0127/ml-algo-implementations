@@ -21,10 +21,15 @@ key = random.PRNGKey(69)
 
 def preprocess_data(data):
     data = np.array(data)
-    flower_types = set(data[:,-1].reshape(-1))
+    flower_types = set(data[:, -1].reshape(-1))
     classes = {flower_type: n for n, flower_type in enumerate(flower_types)}
     data[:, -1] = np.array(list(map(lambda x: classes[x], data[:, -1].reshape(-1))))
     return data.astype(float)
+
+
+def accuracy(predictions, true_labels):
+    return np.sum(predictions == true_labels)/len(predictions)
+
 
 def plot_results(iris_data, my_preds, true_preds):
     TSNE = sklearn.manifold.TSNE(init='pca', learning_rate='auto')
@@ -41,6 +46,7 @@ def plot_results(iris_data, my_preds, true_preds):
         axs[1].scatter(
             embedding[cluster, 0], embedding[cluster, 1], color=color)
     plt.show()
+
 
 @jax.jit
 def forward(layers, data):
@@ -98,6 +104,7 @@ def main():
     data = dataset[:, :-1]
     nn.train(1000, data, targets)
     plot_results(data, nn(data), jnp.argmax(targets, axis=1))
+    print(accuracy(dataset[:, -1], nn(data)))
 
 
 if __name__ == "__main__":

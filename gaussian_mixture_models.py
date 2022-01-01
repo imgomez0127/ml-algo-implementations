@@ -136,7 +136,6 @@ def main():
     GMM_MODEL = GMM(iris_data.shape[1], num_classes=3)
     GMM_MODEL.train(iris_data)
     predicted_classes = GMM_MODEL.predict(iris_data)
-    np.savetxt("classes.csv", predicted_classes, delimiter=",")
     print(GMM_MODEL.soft_predict(iris_data[0:3]))
     print("My Assignment Distribution")
     print(GMM_MODEL.pis)
@@ -144,7 +143,6 @@ def main():
     print("Sklearn Assignment Distribution")
     print(SKLEARN_GMM.weights_)
     sklearn_predicted_classes = SKLEARN_GMM.predict(iris_data)
-    np.savetxt("sklearn_classes.csv", sklearn_predicted_classes, delimiter=",")
     plot_results(iris_data, predicted_classes, sklearn_predicted_classes)
 
 
