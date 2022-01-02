@@ -10,6 +10,11 @@ import collections
 
 
 def top_sort(graph):
+    """Performs topological sort
+
+    Uses topological sort to get the ordering for computing marginalized
+    probability distributions for the Variable Elimination algorithm.
+    """
     q = collections.deque()
     parent_counts = collections.Counter()
     for node, edges in graph.items():
@@ -40,11 +45,12 @@ class BayesianNetwork:
     wise indexing with strings
     """
 
-    def __init__(self, tables, edges):
+    def __init__(self, tables, edges, variable_values):
         self.tables = tables
         self.edges = edges
+        self.variable_values
 
-    def compute_probability(self, event):
+    def compute_probability(self, event, conditioned_variable):
         """Computes the probability of a given event.
 
         This function computes the probability of a given event using the
@@ -53,4 +59,41 @@ class BayesianNetwork:
         must specify a conditioned random variable which we will be making an
         inference for.
         """
+        normalization_event = event.copy
         ordering = top_sort(self.edges)
+        # Repeat for bayesian normalization constant
+        event_factors = self.eliminate_variables(event, ordering)
+        conditioned_probability = event_factors[conditioned_variable]
+        normalization_probability = 0
+        for value in self.variable_values[conditioned_variable]:
+            normalization_event[conditioned_variable] = value
+            normalization_factors = self.eliminate_variables(
+                normalization_event, ordering)
+            normalization_probability += normalization_factors[
+                conditioned_variable]
+        return conditioned_probability/normalization_probability
+
+    def eliminate_variables(self, event, ordering):
+        intermediate_factors = self.tables.copy()
+        for variable in ordering:
+            # Step 1 of EV algorithm multiply all factors containing Xi
+            factor_variables = [node for node in intermediate_factors.items()
+                                if node in self.edges[variable]]
+            factors = [table for node, table in intermediate_factors.items()
+                       if node in self.edges[variable]]
+            factor_table = self.multiply_factors(factors, factor_variables)
+            # Step 2 marginalize to get new factor
+            intermediate_factor = self.marginalize_variable(factor_table,
+                                                            event)
+            # Step 3 replace all factors of Fi with Ti
+            for node in intermediate_factors:
+                if node in self.edges[variable]:
+                    intermediate_factors[node] = intermediate_factor
+        return intermediate_factors
+
+    def multiply_factors(self, factors, factor_variables):
+        for factor in factor_variables:
+            pass
+
+    def marginalize_variable(self, factors, event):
+        pass
