@@ -7,6 +7,8 @@
    Github  : imgomez0127@github
 """
 import collections
+import itertools
+import pandas as pd
 
 
 def top_sort(graph):
@@ -48,9 +50,9 @@ class BayesianNetwork:
     def __init__(self, tables, edges, variable_values):
         self.tables = tables
         self.edges = edges
-        self.variable_values
+        self.variable_values = variable_values
 
-    def compute_probability(self, event, conditioned_variable):
+    def compute_event_probability(self, event, conditioned_variable):
         """Computes the probability of a given event.
 
         This function computes the probability of a given event using the
@@ -59,7 +61,7 @@ class BayesianNetwork:
         must specify a conditioned random variable which we will be making an
         inference for.
         """
-        normalization_event = event.copy
+        normalization_event = event.copy()
         ordering = top_sort(self.edges)
         # Repeat for bayesian normalization constant
         event_factors = self.eliminate_variables(event, ordering)
@@ -84,16 +86,51 @@ class BayesianNetwork:
             factor_table = self.multiply_factors(factors, factor_variables)
             # Step 2 marginalize to get new factor
             intermediate_factor = self.marginalize_variable(factor_table,
-                                                            event)
+                                                            event,
+                                                            variable)
             # Step 3 replace all factors of Fi with Ti
             for node in intermediate_factors:
                 if node in self.edges[variable]:
                     intermediate_factors[node] = intermediate_factor
         return intermediate_factors
 
-    def multiply_factors(self, factors, factor_variables):
-        for factor in factor_variables:
-            pass
+    def multiply_factors(self, factor_tables, factor_variables):
+        variable_mapping = {variable: i
+                            for i, variable in enumerate(factor_variables)}
+        values = [self.variable_values[factor]
+                  for factor in factor_variables]
+        events = list(itertools.product(*values))
+        table_vars = [factor_table.columns.values
+                      for factor_table in factor_tables]
+        new_factor_table = []
+        for event in events:
+            new_factor_prob = 1
+            for factor_table, table_var in zip(factor_tables, table_vars):
+                indices = factor_table
+                for variable in factor_variables:
+                    if variable in table_var:
+                        new_indices = (factor_tables[variable] ==
+                                       event[variable_mapping[variable]])
+                        indices = indices & new_indices
+                new_factor_prob *= factor_table.loc[indices]['probability']
+            new_factor_table.append([*event, new_factor_prob])
+        return pd.DataFrame(new_factor_table,
+                            columns=[*factor_variables, 'probability'])
 
-    def marginalize_variable(self, factors, event):
-        pass
+    def marginalize_variable(self, factor_table, event, variable):
+        remaining_variables = (set(factor_table.columns.values) -
+                               {variable, 'probability'})
+        remaining_variables = list(remaining_variables)
+        values = [event[variable]] if variable in event else self.variable_values[variable]
+        marginalized_probabilities = collections.defaultdict(int)
+        for value in values:
+            value_rows = factor_table[variable] == value
+            for _, row in factor_table.iloc[value_rows].iterrrows():
+                new_event = tuple((row[variable]
+                                   for variable in remaining_variables))
+                marginalized_probabilities[new_event] += row['probability']
+        new_table = [[*key, value]
+                     for key, value in marginalized_probabilities.items()]
+        return pd.DataFrame.from_dict(new_table,
+                                      columns=[*remaining_variables,
+                                               "probability"])
