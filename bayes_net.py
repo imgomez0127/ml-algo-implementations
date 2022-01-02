@@ -96,10 +96,13 @@ class BayesianNetwork:
                                                             event,
                                                             variable)
             # Step 3 replace all factors of Fi with Ti
-            for node in intermediate_factors:
+            for node in factor_variables:
                 if node in self.edges[variable]:
                     intermediate_factors[node] = intermediate_factor
         final_table = intermediate_factors[ordering[-1]]
+        for variable in final_table.columns.values:
+            if variable not in (ordering[-1], 'probability'):
+                final_table = self.marginalize_variable(final_table, event, variable)
         if ordering[-1] in event:
             event_row = final_table.loc[final_table[ordering[-1]] == event[ordering[-1]]]
             return float(event_row['probability'].sum())
@@ -209,7 +212,7 @@ def main():
         'jack': [True, False]
     }
     network = BayesianNetwork(tables, edges, variable_values)
-    event = {'sprinkler': True, 'grass wet': True}
+    event = {'sprinkler': True, 'grass wet': True, 'jack': True}
     print(f'Probability of {event}')
     print(network.compute_event_probability(event, 'sprinkler'))
 
