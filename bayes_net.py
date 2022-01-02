@@ -6,6 +6,7 @@
                  an algorithm to marginalize the probabilities well
    Github  : imgomez0127@github
 """
+import heapq
 import collections
 import itertools
 import pandas as pd
@@ -16,8 +17,10 @@ def top_sort(graph):
 
     Uses topological sort to get the ordering for computing marginalized
     probability distributions for the Variable Elimination algorithm.
+    This will output the ordering sorted by the lower amount of outgoing
+    edges for a more optimal VE ordering.
     """
-    q = collections.deque()
+    q = []
     parent_counts = collections.Counter()
     for node, edges in graph.items():
         parent_counts[node] = parent_counts[node]
@@ -25,14 +28,14 @@ def top_sort(graph):
             parent_counts[edge] += 1
     for node, parents in parent_counts.items():
         if not parents:
-            q.append(node)
+            heapq.heappush(q, (len(graph[node]), node))
     ordering = []
     while q:
-        cur = q.popleft()
+        _, cur = heapq.heappop(q)
         for node in graph[cur]:
             parent_counts[node] -= 1
             if not parent_counts[node]:
-                q.append(node)
+                heapq.heappush(q, (len(graph[node]), node))
         ordering.append(cur)
     return ordering
 
@@ -63,6 +66,7 @@ class BayesianNetwork:
         """
         normalization_event = event.copy()
         ordering = top_sort(self.edges)
+        print(ordering)
         # Repeat for bayesian normalization constant
         conditioned_probability = self.eliminate_variables(event, ordering)
         normalization_probability = 0
@@ -100,6 +104,7 @@ class BayesianNetwork:
                 if node in self.edges[variable]:
                     intermediate_factors[node] = intermediate_factor
         final_table = intermediate_factors[ordering[-1]]
+        print(final_table)
         for variable in final_table.columns.values:
             if variable not in (ordering[-1], 'probability'):
                 final_table = self.marginalize_variable(final_table, event, variable)
