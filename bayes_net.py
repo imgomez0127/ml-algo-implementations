@@ -49,7 +49,6 @@ class BayesianNetwork:
     For this implementation we use pandas dataframes as tables for column
     wise indexing with strings
     """
-
     def __init__(self, tables, edges, variable_values):
         self.tables = tables
         self.edges = edges
@@ -75,7 +74,7 @@ class BayesianNetwork:
             normalization_factor = self.eliminate_variables(
                 normalization_event, ordering)
             normalization_probability += normalization_factor
-        return conditioned_probability/normalization_probability
+        return conditioned_probability / normalization_probability
 
     def eliminate_variables(self, event, ordering):
         """ Computes the VE algorithm.
@@ -88,17 +87,16 @@ class BayesianNetwork:
             # Step 1 of VE algorithm multiply all factors containing Xi
             table_ids = set()
             tables = []
-            possible_factors = self.edges[variable]+[variable]
+            possible_factors = self.edges[variable] + [variable]
             for node in possible_factors:
                 if id(intermediate_factors[node]) not in table_ids:
                     tables.append(intermediate_factors[node])
                     table_ids.add(id(intermediate_factors[node]))
-            factor_variables = self.edges[variable]+[variable]
+            factor_variables = self.edges[variable] + [variable]
             factor_table = self.multiply_factors(tables)
             # Step 2 marginalize to get new factor
-            intermediate_factor = self.marginalize_variable(factor_table,
-                                                            event,
-                                                            variable)
+            intermediate_factor = self.marginalize_variable(
+                factor_table, event, variable)
             # Step 3 replace all factors of Fi with Ti
             for node in factor_variables:
                 if node in self.edges[variable]:
@@ -107,9 +105,11 @@ class BayesianNetwork:
         print(final_table)
         for variable in final_table.columns.values:
             if variable not in (ordering[-1], 'probability'):
-                final_table = self.marginalize_variable(final_table, event, variable)
+                final_table = self.marginalize_variable(
+                    final_table, event, variable)
         if ordering[-1] in event:
-            event_row = final_table.loc[final_table[ordering[-1]] == event[ordering[-1]]]
+            event_row = final_table.loc[final_table[ordering[-1]] == event[
+                ordering[-1]]]
             return float(event_row['probability'].sum())
         return float(intermediate_factors['probability'].sum())
 
@@ -121,16 +121,22 @@ class BayesianNetwork:
         possible events are observed for all factor variables that are input.
         It then computes the probability of the factor table.
         """
-        variables = list({header
-                          for factor_table in factor_tables
-                          for header in factor_table.columns.values
-                          if header != 'probability'})
+        variables = list({
+            header
+            for factor_table in factor_tables
+            for header in factor_table.columns.values
+            if header != 'probability'
+        })
 
-        variable_mapping = {variable: i for i, variable in enumerate(variables)}
+        variable_mapping = {
+            variable: i
+            for i, variable in enumerate(variables)
+        }
         values = [self.variable_values[factor] for factor in variables]
         events = list(itertools.product(*values))
-        table_vars = [list(factor_table.columns.values)
-                      for factor_table in factor_tables]
+        table_vars = [
+            list(factor_table.columns.values) for factor_table in factor_tables
+        ]
         new_factor_table = []
 
         for event in events:
@@ -139,10 +145,11 @@ class BayesianNetwork:
                 indices = factor_table['probability'] >= 0.0
                 for variable in variables:
                     if variable in table_var:
-                        new_indices = (factor_table[variable] ==
-                                       event[variable_mapping[variable]])
+                        new_indices = (factor_table[variable] == event[
+                            variable_mapping[variable]])
                         indices = indices & new_indices
-                new_factor_prob *= float(factor_table.loc[indices]['probability'])
+                new_factor_prob *= float(
+                    factor_table.loc[indices]['probability'])
             new_factor_table.append([*event, new_factor_prob])
         return pd.DataFrame(new_factor_table,
                             columns=[*variables, 'probability'])
@@ -160,14 +167,15 @@ class BayesianNetwork:
                                {variable, 'probability'})
 
         remaining_variables = list(remaining_variables)
-        values = [event[variable]] if variable in event else self.variable_values[variable]
+        values = [event[variable]
+                  ] if variable in event else self.variable_values[variable]
         marginalized_probabilities = collections.defaultdict(int)
 
         for value in values:
             value_rows = factor_table[variable] == value
             for _, row in factor_table.loc[value_rows].iterrows():
-                new_event = tuple((row[variable]
-                                   for variable in remaining_variables))
+                new_event = tuple(
+                    (row[variable] for variable in remaining_variables))
                 marginalized_probabilities[new_event] += row['probability']
 
         new_table = [[*key, value]
@@ -177,26 +185,18 @@ class BayesianNetwork:
 
 
 def main():
-    rain_table = pd.DataFrame([[True, 0.2],
-                               [False, 0.8]],
+    rain_table = pd.DataFrame([[True, 0.2], [False, 0.8]],
                               columns=['rain', 'probability'])
-    sprinkler_table = pd.DataFrame([[True, 0.1],
-                                    [False, 0.9]],
+    sprinkler_table = pd.DataFrame([[True, 0.1], [False, 0.9]],
                                    columns=['sprinkler', 'probability'])
-    grass_table = pd.DataFrame([[True, False, True, 1.0],
-                                [True, True, True, 1.0],
-                                [True, True, False, 0.9],
-                                [True, False, False, 0.0],
-                                [False, False, True, 0.0],
-                                [False, True, True, 0.0],
-                                [False, True, False, 0.1],
-                                [False, False, False, 1.0]],
-                               columns=['grass wet', 'sprinkler',
-                                        'rain', 'probability'])
-    jack_table = pd.DataFrame([[True, True, 1.0],
-                               [True, False, 0.2],
-                               [False, True, 0.0],
-                               [False, False, 0.8]],
+    grass_table = pd.DataFrame(
+        [[True, False, True, 1.0], [True, True, True, 1.0],
+         [True, True, False, 0.9], [True, False, False, 0.0],
+         [False, False, True, 0.0], [False, True, True, 0.0],
+         [False, True, False, 0.1], [False, False, False, 1.0]],
+        columns=['grass wet', 'sprinkler', 'rain', 'probability'])
+    jack_table = pd.DataFrame([[True, True, 1.0], [True, False, 0.2],
+                               [False, True, 0.0], [False, False, 0.8]],
                               columns=['jack', 'rain', 'probability'])
     tables = {
         'rain': rain_table,
