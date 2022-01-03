@@ -65,7 +65,6 @@ class BayesianNetwork:
         """
         normalization_event = event.copy()
         ordering = top_sort(self.edges)
-        print(ordering)
         # Repeat for bayesian normalization constant
         conditioned_probability = self.eliminate_variables(event, ordering)
         normalization_probability = 0
@@ -102,7 +101,6 @@ class BayesianNetwork:
                 if node in self.edges[variable]:
                     intermediate_factors[node] = intermediate_factor
         final_table = intermediate_factors[ordering[-1]]
-        print(final_table)
         for variable in final_table.columns.values:
             if variable not in (ordering[-1], 'probability'):
                 final_table = self.marginalize_variable(
