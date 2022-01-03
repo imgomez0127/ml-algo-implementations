@@ -49,6 +49,7 @@ class BayesianNetwork:
     For this implementation we use pandas dataframes as tables for column
     wise indexing with strings
     """
+
     def __init__(self, tables, edges, variable_values):
         self.tables = tables
         self.edges = edges
@@ -68,6 +69,8 @@ class BayesianNetwork:
         # Repeat for bayesian normalization constant
         conditioned_probability = self.eliminate_variables(event, ordering)
         normalization_probability = 0
+
+        # Marginalizes conditioned variable to get normalization probability
         for value in self.variable_values[conditioned_variable]:
             normalization_event[conditioned_variable] = value
             normalization_factor = self.eliminate_variables(
@@ -82,6 +85,8 @@ class BayesianNetwork:
         CS228 lecture notes.
         """
         intermediate_factors = self.tables.copy()
+
+        # Performs variable elimination
         for variable in ordering[:-1]:
             # Step 1 of VE algorithm multiply all factors containing Xi
             table_ids = set()
@@ -100,7 +105,10 @@ class BayesianNetwork:
             for node in factor_variables:
                 if node in self.edges[variable]:
                     intermediate_factors[node] = intermediate_factor
+
         final_table = intermediate_factors[ordering[-1]]
+
+        # Compute final probability
         for variable in final_table.columns.values:
             if variable not in (ordering[-1], 'probability'):
                 final_table = self.marginalize_variable(
@@ -137,6 +145,7 @@ class BayesianNetwork:
         ]
         new_factor_table = []
 
+        # Compute factor product table
         for event in events:
             new_factor_prob = 1
             for factor_table, table_var in zip(factor_tables, table_vars):
@@ -149,6 +158,7 @@ class BayesianNetwork:
                 new_factor_prob *= float(
                     factor_table.loc[indices]['probability'])
             new_factor_table.append([*event, new_factor_prob])
+
         return pd.DataFrame(new_factor_table,
                             columns=[*variables, 'probability'])
 
