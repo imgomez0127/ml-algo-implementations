@@ -73,9 +73,10 @@ class NeuralNetwork:
                             for key in keys[1:-1]])
         self.layers.append(
             glorot_uniform(keys[-1], (hidden_shape[0], output_shape)))
+        self.grad_function = jax.jit(jax.value_and_grad(loss))
 
     def update(self, data, targets, learning_rate):
-        loss_val, grads = jax.value_and_grad(loss)(self.layers, data, targets)
+        loss_val, grads = self.grad_function(self.layers, data, targets)
         for i, (grad, layer) in enumerate(zip(grads, self.layers)):
             self.layers[i] = layer - learning_rate * grad
         return loss_val
@@ -84,6 +85,7 @@ class NeuralNetwork:
         for i in range(epochs):
             loss_val = self.update(data, targets, learning_rate)
             print(f'\rIteration {i} loss: {loss_val:.2f}', end='')
+        print(f'\rIteration {i} loss: {loss_val:.2f}')
 
     def predict(self, data):
         return jnp.argmax(forward(self.layers, data), axis=1)
