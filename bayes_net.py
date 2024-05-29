@@ -2,8 +2,7 @@
    Name    : bayes_net.py
    Author  : Ian Gomez
    Date    : December 31, 2021
-   Description : On hold until I can figure out how to implement
-                 an algorithm to marginalize the probabilities well
+   Description : Implements a bayesian network using the VE algorithm for performing inference.
    Github  : imgomez0127@github
 """
 import heapq
