@@ -20,7 +20,11 @@ def cosine_similarity(
         doc1: jnp.array,
         doc2: jnp.array,
 ) -> jnp.array:
-    return (doc1@doc2)/((jnp.linalg.norm(doc1)*jnp.linalg.norm(doc2)))
+    return ((doc1@doc2) /
+            jnp.nanprod(
+                jnp.linalg.vector_norm(jnp.array([doc1, doc2]), axis=0),
+                axis=0
+            ))
 
 
 @jax.jit
@@ -39,7 +43,7 @@ def maximal_marginal_relevance(
     Args:
         query: Embedded input user query.
         candidate_docs: Embedded documents which are determined to be relevant
-            to the user query.
+            to the query user.
         seen_docs: Embedded documents which have been evaluated to have maximal
             marginal relevance.
         smoothing: Smoothing parameter to weight MMR towards being close to the
